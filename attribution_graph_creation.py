@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, List
 
 import pandas as pd
 import requests
@@ -9,7 +9,7 @@ from constants import DEFAULT_SAVE_DIR, SAVE_FEATURE_FILENAME
 from utils import save_json, load_json, get_api_key
 
 
-def create_graph(prompt: str) -> dict:
+def create_graph(prompt: str, model: str, submodel: str) -> dict:
     """
     Create an attribution graph from a text prompt using Neuronpedia API.
     """
@@ -20,8 +20,8 @@ def create_graph(prompt: str) -> dict:
         },
         json={
             "prompt": prompt,
-            "modelId": "gemma-2-2b",
-            "sourceSetName": "gemmascope-transcoder-16k",
+            "modelId": model,
+            "sourceSetName": submodel,
             "slug": "",
             "maxNLogits": 10,
             "desiredLogitProb": 0.95,
@@ -82,16 +82,16 @@ def get_frequencies(node_df: pd.DataFrame) -> pd.DataFrame:
     return ctx_freq_df
 
 
-def create_feature_save_path(index: int, layer_num: int, model: str = "gemma-2-2b",
+def create_feature_save_path(index: int = None, layer_num: int = None, model: str = "gemma-2-2b",
                              submodel: str = "gemmascope-transcoder-16k",
                              base_dir: Optional[str] = DEFAULT_SAVE_DIR, filename: Optional[str] = None) -> str:
     """
     Creates the save path for a given feature.
     """
-    if filename is None:
+    if filename is None and layer_num and index:
         filename = SAVE_FEATURE_FILENAME.format(layer=f"{layer_num}", index=index)
     save_dir = os.path.join(base_dir, model, submodel)
-    save_path = os.path.join(save_dir, filename)
+    save_path = os.path.join(save_dir, filename) if filename else save_dir
     return save_path
 
 
@@ -107,7 +107,7 @@ def save_feature(feature_json: dict, foldername: Optional[str] = DEFAULT_SAVE_DI
     return save_path
 
 
-def reload_feature(index: int, layer_num: int, model: str = "gemma-2-2b", submodel: str = "gemmascope-transcoder-16k",
+def reload_feature(index: int, layer_num: int, model: str, submodel: str,
                    foldername: Optional[str] = DEFAULT_SAVE_DIR, filename: Optional[str] = None) -> dict:
     """
     Load previously saved feature data from a JSON file.
@@ -118,8 +118,8 @@ def reload_feature(index: int, layer_num: int, model: str = "gemma-2-2b", submod
     return feature_json
 
 
-def get_feature_from_neuronpedia(index: int, layer_num: int, model: str = "gemma-2-2b",
-                                 submodel: str = "gemmascope-transcoder-16k") -> dict:
+def get_feature_from_neuronpedia(index: int, layer_num: int, model: str,
+                                 submodel: str) -> dict:
     """
     Fetch feature data directly from the Neuronpedia API.
     """
@@ -134,7 +134,7 @@ def get_feature_from_neuronpedia(index: int, layer_num: int, model: str = "gemma
     return res.json()
 
 
-def get_feature(index: int, layer_num: int, model: str = "gemma-2-2b", submodel: str = "gemmascope-transcoder-16k",
+def get_feature(index: int, layer_num: int, model: str, submodel: str,
                 foldername: Optional[str] = DEFAULT_SAVE_DIR, filename: Optional[str] = None) -> dict:
     """
     Get feature data from cache or fetch from Neuronpedia if not cached.
@@ -149,11 +149,12 @@ def get_feature(index: int, layer_num: int, model: str = "gemma-2-2b", submodel:
     return feature_json
 
 
-def get_all_features(features_df: pd.DataFrame, model: str = "gemma-2-2b", submodel: str = "gemmascope-transcoder-16k",
+def get_all_features(features_df: pd.DataFrame, model: str, submodel: str,
                      foldername: Optional[str] = DEFAULT_SAVE_DIR, filename: Optional[str] = None) -> list[dict]:
     """
     Retrieve feature data for all features in the DataFrame.
     """
+    print(f"Saving features to {create_feature_save_path(model=model, submodel=submodel, base_dir=foldername)}")
     features = []
     for feature_row in tqdm(features_df.itertuples(), desc="Getting features from attribution graph",
                             total=len(features_df)):
@@ -163,11 +164,12 @@ def get_all_features(features_df: pd.DataFrame, model: str = "gemma-2-2b", submo
     return features
 
 
-def add_features_to_list(features_df: pd.DataFrame, prompt_id: str, model: str = "gemma-2-2b", submodel: str = "gemmascope-transcoder-16k") -> str:
+def add_features_to_list(features_df: pd.DataFrame, prompt_id: str, model: str,
+                         submodel: str) -> str:
     """
     Add features to a Neuronpedia list and return the list URL.
     """
-    list_id = create_feature_list(prompt_id)
+    list_id = create_feature_list(prompt_id=prompt_id, model=model, submodel=submodel)
     api_key = get_api_key()
     res_list_info = requests.post("https://www.neuronpedia.org/api/list/get",
                   headers={
@@ -207,10 +209,11 @@ def add_features_to_list(features_df: pd.DataFrame, prompt_id: str, model: str =
     return f"https://www.neuronpedia.org/list/{list_id}"
 
 
-def create_feature_list(prompt_id: str) -> str | None:
+def create_feature_list(prompt_id: str, model: str, submodel: str) -> str | None:
     """
     Create or retrieve a feature list for the given prompt ID.
     """
+    list_name = f"{prompt_id}:{model}:{submodel}"
     api_key = get_api_key()
     res_lists = requests.post(
         "https://www.neuronpedia.org/api/list/list",
@@ -220,7 +223,7 @@ def create_feature_list(prompt_id: str) -> str | None:
     )
     assert res_lists.status_code == 200, f"Getting lists returned response {res_lists.status_code}"
     lists_data = res_lists.json()
-    list_ids = [item["id"] for item in lists_data if item["name"] == prompt_id]
+    list_ids = [item["id"] for item in lists_data if item["name"] == list_name]
     if list_ids:
         list_id = list_ids[0]
     else:
@@ -230,7 +233,7 @@ def create_feature_list(prompt_id: str) -> str | None:
                                             "x-api-key": api_key
                                         },
                                         json={
-                                            "name": prompt_id,
+                                            "name": list_name,
                                             "description": "Top frequency features for prompt",
                                             "testText": None
                                         }
@@ -238,3 +241,55 @@ def create_feature_list(prompt_id: str) -> str | None:
         assert res_list_create.status_code == 200, f"Creating new list returned response {res_list_create.status_code}"
         list_id = res_list_create.json()["id"]
     return list_id
+
+def get_overlap_scores_for_features(prompt_tokens: list[str], features: list[dict], tok_k_activations: int = 10) -> list[int]:
+    """
+    Calculates the max overlap of activating tokens with the prompt for each feature.
+    """
+    def process_token(token: str):
+        return token.lstrip('▁').lstrip().lower()
+
+    prompt_tokens_set = {process_token(token) for token in prompt_tokens}
+    overlap_scores = []
+    for feature in features:
+        feature_overlap_scores = []
+        for act in feature["activations"][:tok_k_activations]:
+            activating_tokens = {process_token(token) for token, val in zip(act["tokens"], act["values"]) if val > 0}
+            overlap_score = len(prompt_tokens_set.intersection(activating_tokens))
+            feature_overlap_scores.append(overlap_score)
+        overlap_scores.append(max(feature_overlap_scores))
+    return overlap_scores
+
+def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metadata: dict) -> str:
+    """
+    Creates a subgraph of the selected features on Neuronpedia.
+    """
+    selected_features = {f"{feature.layer}-{feature.feature}": [] for feature in feature_df.itertuples()}
+    graph_nodes = graph_metadata["nodes"]
+    for node in graph_nodes:
+        feature_id = node["node_id"].split("_")[1]
+        feature_key = f"{node['layer']}-{feature_id}"
+        if feature_key in selected_features:
+            selected_features[feature_key].append(node["node_id"])
+    output_node = graph_nodes[-1]["node_id"]
+
+    res = requests.post(
+        "https://www.neuronpedia.org/api/graph/subgraph/save",
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": get_api_key()
+        },
+        json={
+            "modelId": graph_metadata["metadata"]["scan"],
+            "slug": graph_metadata["metadata"]["slug"],
+            "displayName": "top features",
+            "pinnedIds": [node for nodes in selected_features.values() for node in nodes] + [output_node],
+            "supernodes": [ [name] + nodes for name, nodes in selected_features.items() ],
+            "clerps": [],
+            "pruningThreshold": 0.8,
+            "densityThreshold": 0.99,
+            "overwriteId": ""
+        }
+    )
+    res_json = res.json()
+    return res_json['subgraphId']
