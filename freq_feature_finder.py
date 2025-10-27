@@ -2,14 +2,13 @@ import os
 
 import pandas as pd
 from dotenv import load_dotenv
-from pandas.core.computation.expr import intersection
 from pygments.modeline import modeline_re
 
 from act_density_data_download import download_neuronpedia_act_density_data
 from attribution_graph_creation import get_frequencies, create_graph, create_node_df, get_all_features, \
     add_features_to_list, create_subgraph_from_selected_features, get_overlap_scores_for_features
-from constants import AVAILABLE_MODELS
-from utils import load_json, save_json, user_select_prompt, user_select_models, create_prompt_id, get_top_k_from_df
+from utils import load_json, save_json, user_select_prompt, user_select_models, create_prompt_id, get_top_k_from_df, \
+    create_node_id
 from visualizations import freq_vs_act_density
 
 load_dotenv()
@@ -17,7 +16,7 @@ load_dotenv()
 DOWNLOAD_DATA = False
 PROMPT = None
 MODEL = "gemma-2-2b"
-SUBMODEL = "clt-hp" #None
+SUBMODEL = None
 
 SAVE_PATH = "~/data/spar-memory/neuronpedia/"
 ACT_DENSITY_THRESHOLD = 0.4
@@ -79,7 +78,8 @@ if __name__ == "__main__":
                                                                                    'ctx_freq', 'act_density'],
                                                 ascending=[False, False, True])
     top_features = pd.concat([top_features_by_freq, top_features_by_overlap])
-    found_by_both = [f"{feature.layer}-{feature.feature}" for feature in top_features[top_features.duplicated(keep='first')].itertuples()]
+    found_by_both = [create_node_id(feature)
+                     for feature in top_features[top_features.duplicated(keep='first')].itertuples()]
     top_features = top_features.drop_duplicates()
     if found_by_both:
         print(f"Features of interest: {found_by_both}")

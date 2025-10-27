@@ -3,13 +3,14 @@ import glob
 import json
 import os
 import uuid
-from typing import Tuple
+from collections import namedtuple
+from typing import Tuple, NamedTuple
 
 import pandas as pd
 from pick import pick
 
 from constants import NEURONPEDIA_API_KEY_ENV_VAR, AVAILABLE_MODELS
-
+Feature = namedtuple("Feature", ("layer", "feature"))
 
 def save_df(df: pd.DataFrame, foldername: str, filename: str) -> str:
     """
@@ -128,3 +129,24 @@ def get_top_k_from_df(df: pd.DataFrame, k: int, sort_by: str | list[str], ascend
     sorted_df = df.sort_values(by=sort_by, ascending=ascending)
     top_df = sorted_df.head(min(k, len(sorted_df)))
     return top_df
+
+def get_node_ids_from_features(feature_df: pd.DataFrame) -> list[str]:
+    """
+    Creates a list of each node id from a dataframe of features.
+    """
+    return [f"{feature.layer}-{feature.feature}" for feature in feature_df.itertuples()]
+
+def create_node_id(feature: Feature, deliminator: str = "-") -> str:
+    """
+    Creates the node id in the format layer-feature where - is changed via deliminator.
+    """
+    return f"{feature.layer}{deliminator}{feature.feature}"
+
+
+def get_feature_from_node_id(node_id: str, deliminator: str = "-") -> Feature:
+    """
+    Splits the node id into layer, feature based on given deliminator.
+    """
+    split_node_id = node_id.split(deliminator)
+    return Feature(split_node_id[0], split_node_id[1])
+

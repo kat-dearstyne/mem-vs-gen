@@ -1,12 +1,13 @@
 import os
-from typing import Optional, List
+from typing import Optional, List, Tuple, Set
 
 import pandas as pd
 import requests
 from tqdm import tqdm
 
 from constants import DEFAULT_SAVE_DIR, SAVE_FEATURE_FILENAME
-from utils import save_json, load_json, get_api_key
+from utils import save_json, load_json, get_api_key, create_prompt_id, get_node_ids_from_features, \
+    get_feature_from_node_id, Feature, create_node_id
 
 
 def create_graph(prompt: str, model: str, submodel: str) -> dict:
@@ -42,6 +43,23 @@ def create_graph(prompt: str, model: str, submodel: str) -> dict:
     return graph_metadata
 
 
+def create_or_load_graph(graph_dir: str, model: str, submodel: str, prompt: str) -> dict:
+    """
+    Create an attribution graph from a text prompt using Neuronpedia API or reloads from file if already downloaded.
+    """
+    prompt_id = create_prompt_id(prompt)
+    graph_path = os.path.join(graph_dir, prompt_id, f"{model}-{submodel}.json")
+
+    if os.path.exists(graph_path):
+        print(f"Loading graph from {graph_path}")
+        graph_metadata = load_json(graph_path)
+    else:
+        print(f"Saving graph to {graph_path}")
+        graph_metadata = create_graph(prompt=prompt, model=model, submodel=submodel)
+        save_json(graph_metadata, graph_path)
+    return graph_metadata
+
+
 def create_node_df(graph_metadata: dict) -> pd.DataFrame:
     """
     Extract node information from graph metadata into a DataFrame.
@@ -52,7 +70,7 @@ def create_node_df(graph_metadata: dict) -> pd.DataFrame:
     ctx_idx_list = []
 
     for node in graph_metadata["nodes"]:
-        feature = node["node_id"].split("_")[1]
+        feature = get_feature_from_node_id(node["node_id"], deliminator="_")[1]
         feature_list.append(feature)
 
         layer = node["layer"]
@@ -95,7 +113,8 @@ def create_feature_save_path(index: int = None, layer_num: int = None, model: st
     return save_path
 
 
-def save_feature(feature_json: dict, foldername: Optional[str] = DEFAULT_SAVE_DIR, filename: Optional[str] = None) -> str:
+def save_feature(feature_json: dict, foldername: Optional[str] = DEFAULT_SAVE_DIR,
+                 filename: Optional[str] = None) -> str:
     """
     Save feature data to a JSON file in the specified directory.
     """
@@ -172,14 +191,14 @@ def add_features_to_list(features_df: pd.DataFrame, prompt_id: str, model: str,
     list_id = create_feature_list(prompt_id=prompt_id, model=model, submodel=submodel)
     api_key = get_api_key()
     res_list_info = requests.post("https://www.neuronpedia.org/api/list/get",
-                  headers={
-                      "Content-Type": "application/json",
-                      "x-api-key": api_key
-                  },
-                  json={
-                      "listId": list_id
-                  }
-                  )
+                                  headers={
+                                      "Content-Type": "application/json",
+                                      "x-api-key": api_key
+                                  },
+                                  json={
+                                      "listId": list_id
+                                  }
+                                  )
     assert res_list_info.status_code == 200, f"Getting list returned response {res_list_info.status_code}"
     existing_features = {(neuron["modelId"], neuron["layer"], neuron["index"])
                          for neuron in res_list_info.json()["neurons"]}
@@ -242,10 +261,13 @@ def create_feature_list(prompt_id: str, model: str, submodel: str) -> str | None
         list_id = res_list_create.json()["id"]
     return list_id
 
-def get_overlap_scores_for_features(prompt_tokens: list[str], features: list[dict], tok_k_activations: int = 10) -> list[int]:
+
+def get_overlap_scores_for_features(prompt_tokens: list[str], features: list[dict], tok_k_activations: int = 10) -> \
+list[int]:
     """
     Calculates the max overlap of activating tokens with the prompt for each feature.
     """
+
     def process_token(token: str):
         return token.lstrip('▁').lstrip().lower()
 
@@ -260,15 +282,18 @@ def get_overlap_scores_for_features(prompt_tokens: list[str], features: list[dic
         overlap_scores.append(max(feature_overlap_scores))
     return overlap_scores
 
-def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metadata: dict) -> str:
+
+def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metadata: dict,
+                                           list_name: str = "top features") -> str:
     """
     Creates a subgraph of the selected features on Neuronpedia.
     """
-    selected_features = {f"{feature.layer}-{feature.feature}": [] for feature in feature_df.itertuples()}
+    node_ids = get_node_ids_from_features(feature_df)
+    selected_features = {node_id: [] for node_id in node_ids}
     graph_nodes = graph_metadata["nodes"]
     for node in graph_nodes:
-        feature_id = node["node_id"].split("_")[1]
-        feature_key = f"{node['layer']}-{feature_id}"
+        feature_id = get_feature_from_node_id(node["node_id"], deliminator="_")[1]
+        feature_key =  f"{node['layer']}-{feature_id}"
         if feature_key in selected_features:
             selected_features[feature_key].append(node["node_id"])
     output_node = graph_nodes[-1]["node_id"]
@@ -282,9 +307,9 @@ def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metad
         json={
             "modelId": graph_metadata["metadata"]["scan"],
             "slug": graph_metadata["metadata"]["slug"],
-            "displayName": "top features",
+            "displayName": list_name,
             "pinnedIds": [node for nodes in selected_features.values() for node in nodes] + [output_node],
-            "supernodes": [ [name] + nodes for name, nodes in selected_features.items() ],
+            "supernodes": [[name] + nodes for name, nodes in selected_features.items()],
             "clerps": [],
             "pruningThreshold": 0.8,
             "densityThreshold": 0.99,
@@ -293,3 +318,60 @@ def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metad
     )
     res_json = res.json()
     return res_json['subgraphId']
+
+
+def nodes_not_in(main_prompt: str, prompts2compare: List[str], model: str, submodel: str,
+                 graph_dir: Optional[str]) -> Tuple[dict, pd.DataFrame]:
+    """
+    Compares the nodes across prompts and returns a dataframe of only the nodes which are unique to the 'main_prompt'
+    """
+    graph_metadata1 = create_or_load_graph(graph_dir=graph_dir, model=model, submodel=submodel, prompt=main_prompt)
+    node_df1 = create_node_df(graph_metadata1)
+    unique_features = node_df1
+    for prompt in prompts2compare:
+        graph_metadata2 = create_or_load_graph(graph_dir=graph_dir, model=model, submodel=submodel,
+                                               prompt=prompt)
+
+        node_df2 = create_node_df(graph_metadata2)
+        merged_df = unique_features.merge(node_df2, on=['layer', 'feature'],
+                                          how='left', indicator=True).drop_duplicates()
+        unique_features = merged_df[merged_df['_merge'] == 'left_only'].drop(columns=['_merge'])
+    return graph_metadata1, unique_features
+
+
+def nodes_in(main_prompt: str, prompts2compare: List[str], model: str, submodel: str,
+             graph_dir: Optional[str]) -> Tuple[dict, pd.DataFrame]:
+    """
+    Compares the nodes across prompts and returns a dataframe of only the nodes which are unique to the 'main_prompt'
+    """
+    graph_metadata1 = create_or_load_graph(graph_dir=graph_dir, model=model, submodel=submodel, prompt=main_prompt)
+    node_df1 = create_node_df(graph_metadata1)
+    overlapping_features = node_df1
+    for i, prompt in enumerate(prompts2compare):
+        graph_metadata2 = create_or_load_graph(graph_dir=graph_dir, model=model, submodel=submodel,
+                                               prompt=prompt)
+
+        node_df2 = create_node_df(graph_metadata2)
+        overlapping_features = pd.merge(overlapping_features, node_df2, on=['layer', 'feature'],
+                                        how='inner', suffixes=(f'{i}a', f'{i}b'))
+    return graph_metadata1, overlapping_features
+
+def select_features_by_links(graph_metadata: dict, target_ids: str | Set[str],
+                          source_ids: str | Set[str], pos_links_only: bool = True) -> Set[Feature]:
+    """
+    Selects features based on whether they are connected to the given target ids or source ids.
+    """
+    target_ids = {target_ids} if not isinstance(target_ids, set) else target_ids
+    source_ids = {source_ids} if not isinstance(source_ids, set) else source_ids
+
+    selected_features = set()
+    for link in graph_metadata["links"]:
+        if pos_links_only and link["weight"] < 0:
+            continue
+        target_feature =  get_feature_from_node_id(link["target"], deliminator="_")
+        if create_node_id(target_feature) in target_ids or link["target"] in target_ids:
+            source_feature =  get_feature_from_node_id(link["source"], deliminator="_")
+            if create_node_id(source_feature) in source_ids or link["source"] in source_ids:
+                selected_features.add((source_feature.layer, source_feature.feature))
+                selected_features.add((target_feature.layer, target_feature.feature))
+    return selected_features
