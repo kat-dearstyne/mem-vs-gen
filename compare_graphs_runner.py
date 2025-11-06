@@ -14,15 +14,17 @@ from utils import user_select_prompt, user_select_models, get_node_ids_from_feat
 load_dotenv()
 
 DOWNLOAD_DATA = False
-PROMPT = "THE SOFTWARE IS PROVIDED" #("THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, "
-          #"INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF")
-CONTRAST_PROMPTS = [
-    "THE SOFTWARE AND ANY ACCOMPANYING MATERIALS ARE PROVIDED \"AS IS\", "
-    "WITHOUT ANY PROMISE OR GUARANTEE OF PERFORMANCE, RELIABILITY, OR SUITABILITY AND THE WARRANTIES OF",
-    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT"
-]
-COMPARE_PROMPTS = ["The software is provided \"as is\", without warranty of any kind, express or implied, "
-                   "including but not limited to the warranties of"]
+PROMPT = "International Consensus Meeting (IC"
+CONTRAST_PROMPTS = []
+# [
+#     "THE SOFTWARE AND ANY ACCOMPANYING MATERIALS ARE PROVIDED \"AS IS\", "
+#     "WITHOUT ANY PROMISE OR GUARANTEE OF PERFORMANCE, RELIABILITY, OR SUITABILITY AND THE WARRANTIES OF",
+#     "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT"
+# ]
+COMPARE_PROMPTS = ["THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, "
+          "INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF"]
+    # ["The software is provided \"as is\", without warranty of any kind, express or implied, "
+    #                "including but not limited to the warranties of"]
 MODEL = "gemma-2-2b"
 SUBMODEL = "clt-hp"
 

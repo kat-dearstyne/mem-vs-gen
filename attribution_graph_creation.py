@@ -3,6 +3,7 @@ from typing import Optional, List, Tuple, Set
 
 import pandas as pd
 import requests
+from pandas import DataFrame
 from tqdm import tqdm
 
 from constants import DEFAULT_SAVE_DIR, SAVE_FEATURE_FILENAME
@@ -284,7 +285,7 @@ list[int]:
 
 
 def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metadata: dict,
-                                           list_name: str = "top features") -> str:
+                                           list_name: str = "top features", include_output_node: bool = True) -> str:
     """
     Creates a subgraph of the selected features on Neuronpedia.
     """
@@ -296,7 +297,9 @@ def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metad
         feature_key =  f"{node['layer']}-{feature_id}"
         if feature_key in selected_features:
             selected_features[feature_key].append(node["node_id"])
-    output_node = graph_nodes[-1]["node_id"]
+    output_nodes = []
+    if include_output_node:
+        output_nodes.append(graph_nodes[-1]["node_id"])
 
     res = requests.post(
         "https://www.neuronpedia.org/api/graph/subgraph/save",
@@ -308,7 +311,7 @@ def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metad
             "modelId": graph_metadata["metadata"]["scan"],
             "slug": graph_metadata["metadata"]["slug"],
             "displayName": list_name,
-            "pinnedIds": [node for nodes in selected_features.values() for node in nodes] + [output_node],
+            "pinnedIds": [node for nodes in selected_features.values() for node in nodes] + output_nodes,
             "supernodes": [[name] + nodes for name, nodes in selected_features.items()],
             "clerps": [],
             "pruningThreshold": 0.8,
@@ -318,6 +321,25 @@ def create_subgraph_from_selected_features(feature_df: pd.DataFrame, graph_metad
     )
     res_json = res.json()
     return res_json['subgraphId']
+
+
+def get_subgraphs(graph_metadata) -> dict:
+    """
+    Creates a subgraph of the selected features on Neuronpedia.
+    """
+    res = requests.post(
+        "https://www.neuronpedia.org/api/graph/subgraph/list",
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": get_api_key()
+        },
+        json={
+            "modelId": graph_metadata["metadata"]["scan"],
+            "slug": graph_metadata["metadata"]["slug"],
+        }
+    )
+    res_json = res.json()
+    return res_json
 
 
 def nodes_not_in(main_prompt: str, prompts2compare: List[str], model: str, submodel: str,
@@ -333,10 +355,18 @@ def nodes_not_in(main_prompt: str, prompts2compare: List[str], model: str, submo
                                                prompt=prompt)
 
         node_df2 = create_node_df(graph_metadata2)
-        merged_df = unique_features.merge(node_df2, on=['layer', 'feature'],
-                                          how='left', indicator=True).drop_duplicates()
-        unique_features = merged_df[merged_df['_merge'] == 'left_only'].drop(columns=['_merge'])
+        unique_features = filter_for_unique_features(unique_features, node_df2)
     return graph_metadata1, unique_features
+
+
+def filter_for_unique_features(node_df1: DataFrame, node_df2: DataFrame) -> DataFrame:
+    """
+    Filters out features that are in node_df2 and keeps only features unique to node_df1.
+    """
+    merged_df = node_df1.merge(node_df2, on=['layer', 'feature'],
+                               how='left', indicator=True).drop_duplicates()
+    node_df1 = merged_df[merged_df['_merge'] == 'left_only'].drop(columns=['_merge'])
+    return node_df1
 
 
 def nodes_in(main_prompt: str, prompts2compare: List[str], model: str, submodel: str,
@@ -375,3 +405,16 @@ def select_features_by_links(graph_metadata: dict, target_ids: str | Set[str],
                 selected_features.add((source_feature.layer, source_feature.feature))
                 selected_features.add((target_feature.layer, target_feature.feature))
     return selected_features
+
+def get_linked_sources(graph_metadata: dict, output_token_to_features: dict, positive_only: bool = True):
+    """
+    Gets all sources linked to each output token.
+    """
+    newly_added = False
+    for link in graph_metadata["links"]:
+        for token, nodes in output_token_to_features.items():
+            if link["target"] in nodes and (not positive_only or link["weight"] > 0):
+                if link["source"] not in nodes:
+                    nodes.add(link["source"])
+                    newly_added = True
+    return newly_added

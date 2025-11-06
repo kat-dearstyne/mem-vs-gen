@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="400">
+    <!-- Background -->
+    <rect width="700" height="400" fill="#f5f5f5"/>
+    <rect x="20" y="20" width="660" height="360" fill="white" stroke="none" rx="12"/>
+    
+    <!-- Title -->
+    <text x="40" y="45" fill="#666" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-transform="uppercase" letter-spacing="1px">Graph &amp; Interventions</text>
+    
+    <!-- Graph area (moved up significantly) -->
+    <g transform="translate(50, 0)">
+        <line x1="325.0" y1="211.94444444444446" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="325.0" y1="211.94444444444446" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="325.0" y1="211.94444444444446" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="325.0" y1="211.94444444444446" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="325.0" y1="211.94444444444446" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="325.0" y1="211.94444444444446" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="325.0" y1="211.94444444444446" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 317.39709419411037,216.6556887924666 316.66926103804855,208.68886640854606" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 317.39709419411037,216.6556887924666 316.66926103804855,208.68886640854606" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 317.39709419411037,216.6556887924666 316.66926103804855,208.68886640854606" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 317.39709419411037,216.6556887924666 316.66926103804855,208.68886640854606" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 317.39709419411037,216.6556887924666 316.66926103804855,208.68886640854606" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 317.39709419411037,216.6556887924666 316.66926103804855,208.68886640854606" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 317.39709419411037,216.6556887924666 316.66926103804855,208.68886640854606" fill="#8B4513"/>
+<line x1="100.0" y1="267.5" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 320.1155926861606,108.32616758964194 316.07508820664947,101.42150803604697" fill="#8B4513"/>
+<line x1="550.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 333.33073896195145,208.68886640854606 332.60290580588963,216.6556887924666" fill="#8B4513"/>
+<line x1="550.0" y1="267.5" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 333.92491179335053,101.42150803604697 329.8844073138394,108.32616758964194" fill="#8B4513"/>
+<line x1="325.0" y1="156.38888888888889" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 329.0,108.83333333333331 321.0,108.83333333333331" fill="#8B4513"/>
+<line x1="400.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 333.772771445347,210.2013204764765 331.65816204158256,217.91678721994128" fill="#8B4513"/>
+<line x1="400.0" y1="267.5" x2="325.0" y2="211.94444444444446" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,211.94444444444446 333.772771445347,210.2013204764765 331.65816204158256,217.91678721994128" fill="#8B4513"/>
+<line x1="400.0" y1="267.5" x2="325.0" y2="100.83333333333331" stroke="#8B4513" stroke-width="3"/>
+<polygon points="325.0,100.83333333333331 332.43530854845596,105.80487100182756 325.4839549942782,109.76450277319466" fill="#8B4513"/>
+        <rect x="25.0" y="250.0" width="150" height="35" fill="#e8e8e8" stroke="#999" stroke-width="2" rx="8"/>
+<text x="100.0" y="272.5" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="12" font-weight="bold"> SOFTWARE</text>
+<rect x="175.0" y="250.0" width="150" height="35" fill="#e8e8e8" stroke="#999" stroke-width="2" rx="8"/>
+<text x="250.0" y="272.5" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="12" font-weight="bold"> IS</text>
+<rect x="325.0" y="250.0" width="150" height="35" fill="#e8e8e8" stroke="#999" stroke-width="2" rx="8"/>
+<text x="400.0" y="272.5" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="12" font-weight="bold"> WARRANTIES</text>
+<rect x="475.0" y="250.0" width="150" height="35" fill="#e8e8e8" stroke="#999" stroke-width="2" rx="8"/>
+<text x="550.0" y="272.5" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="12" font-weight="bold"> OF</text>
+<rect x="250.0" y="194.44444444444446" width="150" height="35" fill="#e8e8e8" stroke="#999" stroke-width="2" rx="8"/>
+<text x="325.0" y="216.94444444444446" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="12" font-weight="bold">Software License Context</text>
+<rect x="250.0" y="138.88888888888889" width="150" height="35" fill="#e8e8e8" stroke="#999" stroke-width="2" rx="8"/>
+<text x="325.0" y="161.38888888888889" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="12" font-weight="bold">next letter m</text>
+<rect x="250.0" y="83.33333333333331" width="150" height="35" fill="#e8e8e8" stroke="#999" stroke-width="2" rx="8"/>
+<text x="325.0" y="105.83333333333331" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="12" font-weight="bold"> MERCHANTABILITY</text>
+    </g>
+    
+    <!-- Prompt section -->
+    <line x1="40" y1="290" x2="660" y2="290" stroke="#ddd" stroke-width="1"/>
+    <text x="40" y="310" fill="#666" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-transform="uppercase" letter-spacing="0.5px">Prompt</text>
+    
+    <!-- Prompt text (GitHub-compatible) -->
+    <text x="40" y="325" fill="#333" font-family="Arial, sans-serif" font-size="12">THE SOFTWARE AND ANY ACCOMPANYING MATERIALS ARE PROVIDED &quot;AS IS&quot;,</text>
+<text x="40" y="340" fill="#333" font-family="Arial, sans-serif" font-size="12">WITHOUT ANY PROMISE OR GUARANTEE, INCLUDING THE WARRANTIES OF</text>
+    
+    <!-- Top outputs section -->
+    <text x="40" y="350" fill="#666" font-family="Arial, sans-serif" font-size="10" font-weight="bold" text-transform="uppercase" letter-spacing="0.5px">Top Outputs</text>
+    
+    <!-- Output items -->
+    <g transform="translate(0, 5)">
+        
+    </g>
+</svg>
